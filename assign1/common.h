@@ -11,8 +11,6 @@
 #include <sys/msg.h>
 #include <sys/time.h>
 
-#define typename(x) _Generic((x), char: "char", int: "int")
-
 typedef enum {
   CONTROLLER_CHILD=1,
   CONTROLLER_PARENT
@@ -41,3 +39,21 @@ struct cntl_msg {
   long int msg_type;
   cntl_cmd command;
 };
+
+static int mqid =-1;
+
+int acquire_msgq () {
+
+  mqid = msgget (ftok ("./UID", 1), 0666 | IPC_CREAT);
+  if (mqid == -1) return (0);
+  
+  return (1);
+}
+
+void remove_msgq () {
+
+  (void)msgctl(mqid, IPC_RMID, 0);
+  
+  mqid = -1;
+}
+
