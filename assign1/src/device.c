@@ -3,6 +3,8 @@
 
 static struct device_info private_info;
 static int running = 1;
+static struct ctrl_msg cmd_msg;
+static struct event_base *base;
 
 int fwd_info () {
   struct device_msg my_msg;
@@ -21,15 +23,36 @@ int init () {
 }
 
 void sensor_duty (evutil_socket_t fd, short events, void *arg) {
-  //TODO: Check if threshold reached
   private_info.current_value = rand () % (private_info.threshold * 2);
   fwd_info ();
+ 
+  if (private_info.current_value > private_info.threshold)  {
+    fprintf (stdout,"%s alarm is going off!\n", private_info.name);
+  }
+}
+
+void receive_duty (evutil_socket_t fd, short events, void *arg) {
+  const bool* flag = arg;
+  
+  msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.command), private_info.pid, IPC_NOWAIT);
+  
+  if (flag && cmd_msg.command == ACT_COMMAND)  {
+    fprintf(stdout, "%s is activated!\n", private_info.name);
+    private_info.activated = true;
+    fwd_info ();
+  } else if (cmd_msg.command == STOP_COMMAND) {
+    struct timeval tv = {1,0};
+    event_base_loopexit (base, &tv);
+  }
 }
 
 
 int main (int argc, char *argv[]) {
-  struct ctrl_msg cmd_msg;
-  struct event_base *base = event_base_new();
+  if (!(argc > 1 && argc <=4) ) {
+    perror ("Invalid argument length");
+    exit (EXIT_FAILURE);
+  }
+  base = event_base_new();
   struct event *ev;
   struct timeval period = {2,0};
   // parse cmd line arguments
@@ -46,10 +69,31 @@ int main (int argc, char *argv[]) {
   }  
   // initialize
   private_info.pid = getpid ();
+  private_info.activated = false;
+  
+  switch (private_info.device_type) {
+  case 's':
+    srand (time (NULL));
+    ev = event_new (base, -1, EV_PERSIST, sensor_duty, NULL);
+    struct timeval tv = {3,0};
+    event_add (event_new (base, -1, EV_PERSIST, receive_duty, (bool*) false), &tv);
+    break;
+  case 'a':
+    ev = event_new (base, -1, EV_PERSIST, receive_duty, (bool*) true);
+    private_info.threshold = 0;
+    private_info.current_value = 0;
+    break;
+  default:
+    perror ("Invalid device type");
+    exit (EXIT_FAILURE);
+    break;
+  }
+  
   if (!init ())  {
     perror ("Fatal error during intialization!");
     return (0);
   }
+  
   do {
     if (msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.command), private_info.pid, 0) == -1) {
       fprintf (stdout, "msgrcv failed with error: %d\n", errno);
@@ -57,17 +101,7 @@ int main (int argc, char *argv[]) {
     }
   } while (cmd_msg.command != START_COMMAND);
   
-  switch (private_info.device_type) {
-  case 's':
-    srand (time (NULL));
-    ev = event_new (base, -1, EV_PERSIST, sensor_duty, NULL);
-    break;
-  case 'a':
-    break;
-  default:
-    break;
-  }
-  
   event_add (ev, &period);
   event_base_dispatch(base);
+
 }

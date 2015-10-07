@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include <sys/time.h>
+#include <stdbool.h>
 
 typedef enum {
   CONTROLLER_CHILD=1,
@@ -20,7 +21,9 @@ typedef enum {
 typedef enum {
   START_COMMAND,
   ACT_COMMAND,
-  STOP_COMMAND
+  STOP_COMMAND,
+  GET_COMMAND,
+  PUT_COMMAND
 } ctrl_cmd;
 
 struct device_info {
@@ -29,6 +32,7 @@ struct device_info {
   char device_type;
   int threshold;
   int current_value;
+  _Bool activated;
 };
 
 struct device_msg {
