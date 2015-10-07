@@ -52,7 +52,7 @@ int acquire_msgq () {
 
 void remove_msgq () {
 
-  (void)msgctl(mqid, IPC_RMID, 0);
+  (void)msgctl (mqid, IPC_RMID, 0);
   
   mqid = -1;
 }
