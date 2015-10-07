@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/msg.h>
@@ -45,8 +46,10 @@ static int mqid =-1;
 int acquire_msgq () {
 
   mqid = msgget (ftok ("./UID", 1), 0666 | IPC_CREAT);
-  if (mqid == -1) return (0);
-  
+  if (mqid == -1) {
+    perror ("Failed to acquire message queue!");
+    return (0);
+  }
   return (1);
 }
 
