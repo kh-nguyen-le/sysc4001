@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-I$(IDIR) -std=c99 -D_GNU_SOURCE
 
 LDIR =../lib
-LDFLAGS = -L$(LDIR) -static -levent_core
+LDFLAGS = -L$(LDIR) -levent_core
 
 all: device test
 
