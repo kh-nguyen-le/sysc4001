@@ -20,7 +20,7 @@ typedef enum {
   START_COMMAND,
   ACT_COMMAND,
   STOP_COMMAND
-} cntl_cmd;
+} ctrl_cmd;
 
 struct device_info {
   pid_t pid;
@@ -35,9 +35,9 @@ struct device_msg {
   struct device_info private_info;
 };
 
-struct cntl_msg {
+struct ctrl_msg {
   long int msg_type;
-  cntl_cmd command;
+  ctrl_cmd command;
 };
 
 static int mqid =-1;
