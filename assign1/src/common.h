@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include <sys/time.h>
-#include <stdbool.h>
+#include <glib.h>
 
 typedef enum {
   CONTROLLER_CHILD=1,
@@ -32,7 +32,7 @@ struct device_info {
   char device_type;
   int threshold;
   int current_value;
-  _Bool activated;
+  gboolean activated;
 };
 
 struct device_msg {
@@ -40,9 +40,14 @@ struct device_msg {
   struct device_info private_info;
 };
 
+struct ctrl_info {
+    char name [25];
+    ctrl_cmd command;
+};
+
 struct ctrl_msg {
   long int msg_type;
-  ctrl_cmd command;
+  struct ctrl_info private_info;
 };
 
 static int mqid =-1;

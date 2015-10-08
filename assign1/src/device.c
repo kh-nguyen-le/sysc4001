@@ -32,15 +32,15 @@ void sensor_duty (evutil_socket_t fd, short events, void *arg) {
 }
 
 void receive_duty (evutil_socket_t fd, short events, void *arg) {
-  const bool* flag = arg;
+  const gboolean* flag = arg;
   
-  msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.command), private_info.pid, IPC_NOWAIT);
+  msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.private_info), private_info.pid, IPC_NOWAIT);
   
-  if (flag && cmd_msg.command == ACT_COMMAND)  {
+  if (flag && cmd_msg.private_info.command == ACT_COMMAND)  {
     fprintf(stdout, "%s is activated!\n", private_info.name);
-    private_info.activated = true;
+    private_info.activated = TRUE;
     fwd_info ();
-  } else if (cmd_msg.command == STOP_COMMAND) {
+  } else if (cmd_msg.private_info.command == STOP_COMMAND) {
     struct timeval tv = {1,0};
     event_base_loopexit (base, &tv);
   }
@@ -69,17 +69,17 @@ int main (int argc, char *argv[]) {
   }  
   // initialize
   private_info.pid = getpid ();
-  private_info.activated = false;
+  private_info.activated = FALSE;
   
   switch (private_info.device_type) {
   case 's':
     srand (time (NULL));
     ev = event_new (base, -1, EV_PERSIST, sensor_duty, NULL);
     struct timeval tv = {3,0};
-    event_add (event_new (base, -1, EV_PERSIST, receive_duty, (bool*) false), &tv);
+    event_add (event_new (base, -1, EV_PERSIST, receive_duty, (gboolean*) FALSE), &tv);
     break;
   case 'a':
-    ev = event_new (base, -1, EV_PERSIST, receive_duty, (bool*) true);
+    ev = event_new (base, -1, EV_PERSIST, receive_duty, (gboolean*) TRUE);
     private_info.threshold = 0;
     private_info.current_value = 0;
     break;
@@ -95,11 +95,11 @@ int main (int argc, char *argv[]) {
   }
   
   do {
-    if (msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.command), private_info.pid, 0) == -1) {
+    if (msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.private_info), private_info.pid, 0) == -1) {
       fprintf (stdout, "msgrcv failed with error: %d\n", errno);
       perror ("msgrcv");
     }
-  } while (cmd_msg.command != START_COMMAND);
+  } while (cmd_msg.private_info.command != START_COMMAND);
   
   event_add (ev, &period);
   event_base_dispatch(base);

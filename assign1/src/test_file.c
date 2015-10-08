@@ -39,19 +39,19 @@ int main (int argc, char *argv[])  {
     printf ("Current Value: %d\n", some_data.private_info.current_value);
     printf ("Sending START command to PID: %d\n", some_data.private_info.pid);
     reply_msg.msg_type = some_data.private_info.pid;
-    reply_msg.command = START_COMMAND;
-    if (msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.command), 0) == -1) {
+    reply_msg.private_info.command = START_COMMAND;
+    if (msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0) == -1) {
       perror ("Message send failed!");
     }
     if (some_data.private_info.device_type == 'a') {
-      reply_msg.command = ACT_COMMAND;
+      reply_msg.private_info.command = ACT_COMMAND;
       printf ("Sending ACT command to PID: %d\n", some_data.private_info.pid);
-      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.command), 0);
+      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0);
     }
     if (++count > 10) {
-      reply_msg.command = STOP_COMMAND;
+      reply_msg.private_info.command = STOP_COMMAND;
       printf ("Sending STOP command to PID: %d\n", some_data.private_info.pid);
-      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.command), 0);
+      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0);
     }
   }           	
 }
