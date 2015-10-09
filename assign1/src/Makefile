@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-I$(IDIR) -std=c99 -D_GNU_SOURCE $(shell pkg-config --cflags glib-2.0)
 
 LDIR = ../lib
-LDFLAGS = -L$(LDIR) -levent_core $(shell pkg-config --libs glib-2.0)
+LDFLAGS = -L$(LDIR) -levent $(shell pkg-config --libs glib-2.0)
 
 
 all: device controller test
