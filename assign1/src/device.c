@@ -26,7 +26,7 @@ int init () {
 void sensor_duty (evutil_socket_t fd, short events, void *arg) {
   private_info.current_value = rand () % (private_info.threshold * 2);
   fwd_info ();
- 
+  
   if (private_info.current_value > private_info.threshold)  {
     fprintf (stdout,"%s alarm is going off!\n", private_info.name);
   }
@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
       perror ("msgrcv");
     }
   } while (cmd_msg.private_info.command != START_COMMAND);
-  
+  fprintf (stdout, "Dispatching event base!\n");
   event_add (ev, &period);
   event_base_dispatch(base);
 

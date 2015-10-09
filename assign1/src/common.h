@@ -19,7 +19,7 @@ typedef enum {
 } msg_qid;
 
 typedef enum {
-  START_COMMAND,
+  START_COMMAND=1,
   ACT_COMMAND,
   STOP_COMMAND,
   GET_COMMAND,
