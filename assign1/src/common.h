@@ -50,6 +50,12 @@ struct ctrl_msg {
   struct ctrl_info private_info;
 };
 
+struct hash_entry_t {
+  pid_t sensor_pid;
+  pid_t actuator_pid;
+  struct device_info info;
+}; 
+
 static int mqid =-1;
 
 int acquire_msgq () {

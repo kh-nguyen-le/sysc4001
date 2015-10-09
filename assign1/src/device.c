@@ -10,7 +10,8 @@ int fwd_info () {
   struct device_msg my_msg;
   my_msg.msg_type = CONTROLLER_CHILD;
   my_msg.private_info = private_info;
-  if (msgsnd (mqid, (void*)&my_msg, sizeof (my_msg.private_info), 0) == -1) {
+  fprintf (stdout, "%s %c sending msg to controller\n", private_info.name, private_info.device_type); 
+  if (msgsnd (mqid, (void*)&my_msg, sizeof (struct device_info), 0) == -1) {
     perror ("Message send failed!");
     return (0);
   }
@@ -34,7 +35,7 @@ void sensor_duty (evutil_socket_t fd, short events, void *arg) {
 void receive_duty (evutil_socket_t fd, short events, void *arg) {
   const gboolean* flag = arg;
   
-  msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.private_info), private_info.pid, IPC_NOWAIT);
+  msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), private_info.pid, IPC_NOWAIT);
   
   if (flag && cmd_msg.private_info.command == ACT_COMMAND)  {
     fprintf(stdout, "%s is activated!\n", private_info.name);
@@ -95,7 +96,7 @@ int main (int argc, char *argv[]) {
   }
   
   do {
-    if (msgrcv (mqid, (void *)&cmd_msg, sizeof (cmd_msg.private_info), private_info.pid, 0) == -1) {
+    if (msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), private_info.pid, 0) == -1) {
       fprintf (stdout, "msgrcv failed with error: %d\n", errno);
       perror ("msgrcv");
     }

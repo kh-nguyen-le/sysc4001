@@ -19,7 +19,7 @@ int main (int argc, char *argv[])  {
   struct ctrl_msg reply_msg;
   int count = 0;
   while (running)  {
-    if (msgrcv (mqid, (void *)&some_data, sizeof (some_data.private_info), CONTROLLER_CHILD, 0) == -1) {
+    if (msgrcv (mqid, (void *)&some_data, sizeof (struct device_info), CONTROLLER_CHILD, 0) == -1) {
       fprintf (stdout, "msgrcv failed with error: %d\n", errno);
       perror ("msgrcv");
       if (errno == EINTR) {
@@ -40,18 +40,18 @@ int main (int argc, char *argv[])  {
     printf ("Sending START command to PID: %d\n", some_data.private_info.pid);
     reply_msg.msg_type = some_data.private_info.pid;
     reply_msg.private_info.command = START_COMMAND;
-    if (msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0) == -1) {
+    if (msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0) == -1) {
       perror ("Message send failed!");
     }
     if (some_data.private_info.device_type == 'a') {
       reply_msg.private_info.command = ACT_COMMAND;
       printf ("Sending ACT command to PID: %d\n", some_data.private_info.pid);
-      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0);
+      msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);
     }
     if (++count > 10) {
       reply_msg.private_info.command = STOP_COMMAND;
       printf ("Sending STOP command to PID: %d\n", some_data.private_info.pid);
-      msgsnd (mqid, (void*)&reply_msg, sizeof (reply_msg.private_info.command), 0);
+      msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);
     }
   }           	
 }
