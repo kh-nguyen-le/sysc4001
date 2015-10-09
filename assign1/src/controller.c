@@ -27,20 +27,21 @@ void child_duty (evutil_socket_t fd, short events, void *arg) {
       temp.actuator_pid = (my_msg.private_info.device_type == 'a') ? my_msg.private_info.pid : 0;
       temp.info = my_msg.private_info;
       database = g_array_append_val (database, temp);
-      *db_index = g_array_get_element_size (database);
+      *db_index = database->len;
       g_hash_table_insert (hash, my_msg.private_info.name, db_index);
-    }//end if
-    temp = g_array_index (database, struct hash_entry_t, *db_index);
-    if (temp.sensor_pid == 0 ) {
-      temp.sensor_pid = my_msg.private_info.pid;
-      temp.info.threshold = my_msg.private_info.threshold;
-      temp.info.current_value = my_msg.private_info.current_value;
-      g_array_insert_val (database, *db_index, temp);
-    } else if (temp.actuator_pid == 0) {
-      temp.actuator_pid = my_msg.private_info.pid;
-      temp.info.activated = my_msg.private_info.activated;
-      g_array_insert_val (database, *db_index, temp);
-    }//end if
+    } else {
+      temp = g_array_index (database, struct hash_entry_t, *db_index);
+      if (temp.sensor_pid == 0 ) {
+        temp.sensor_pid = my_msg.private_info.pid;
+        temp.info.threshold = my_msg.private_info.threshold;
+        temp.info.current_value = my_msg.private_info.current_value;
+        g_array_insert_val (database, *db_index, temp);
+      } else if (temp.actuator_pid == 0) {
+        temp.actuator_pid = my_msg.private_info.pid;
+        temp.info.activated = my_msg.private_info.activated;
+        g_array_insert_val (database, *db_index, temp);
+      }//end if
+    }
     
     if (my_msg.private_info.device_type == 'a') {
       cmd_msg.private_info.command = ACT_COMMAND;
