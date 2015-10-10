@@ -50,7 +50,7 @@ struct ctrl_msg {
   struct ctrl_info private_info;
 };
 
-struct hash_entry_t {
+struct db_entry_t {
   pid_t sensor_pid;
   pid_t actuator_pid;
   struct device_info info;
