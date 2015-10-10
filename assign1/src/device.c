@@ -2,7 +2,6 @@
 #include <event2/event.h>
 
 static struct device_info private_info;
-static int running = 1;
 static struct ctrl_msg cmd_msg;
 static struct event_base *base;
 
