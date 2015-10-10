@@ -1,12 +1,16 @@
 #include "common.h"
 
+GHashTable* hash;
+GArray* garray;
+
 void sigint_handler (int sig) {
   printf ("Caught SIGINT\n");
 }
 
 int main (int argc, char *argv[])  {
-
+  hash = g_hash_table_new (g_str_hash, g_str_equal);
   struct device_msg some_data;
+  garray = g_array_new (FALSE, TRUE, sizeof (struct db_entry_t));
   (void)acquire_msgq ();
   int running = 1;
   
@@ -38,6 +42,16 @@ int main (int argc, char *argv[])  {
     printf ("Threshold: %d\n", some_data.private_info.threshold);
     printf ("Current Value: %d\n", some_data.private_info.current_value);
     printf ("Sending START command to PID: %d\n", some_data.private_info.pid);
+    
+    struct db_entry_t temp;
+    temp.sensor_pid = some_data.private_info.pid;
+    temp.info = some_data.private_info;
+    g_array_append_val (garray, temp);
+    printf ("Hash size: %d\n", g_hash_table_size (hash));
+    g_hash_table_insert (hash, (gpointer*)temp.info.name, GINT_TO_POINTER (garray->len - 1));
+    printf ("Hash size: %d\n", g_hash_table_size (hash));
+    printf ("Hash insert succeed\n");
+    
     reply_msg.msg_type = some_data.private_info.pid;
     reply_msg.private_info.command = START_COMMAND;
     if (msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0) == -1) {
