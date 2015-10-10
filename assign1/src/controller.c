@@ -11,7 +11,7 @@ void child_duty (evutil_socket_t fd, short events, void *arg) {
   guint* db_index;
   char* key[25];
   struct device_msg my_msg;
-  struct hash_entry_t temp;
+  struct db_entry_t db;
   int count = 0;
   
   if (msgrcv (mqid, (void *)&my_msg, sizeof (struct device_info), CONTROLLER_CHILD, 0))  {
@@ -23,23 +23,23 @@ void child_duty (evutil_socket_t fd, short events, void *arg) {
         perror ("Message send failed!");
       }//end if
       printf ("Sent START command to PID: %d\n", my_msg.private_info.pid);
-      temp.sensor_pid = (my_msg.private_info.device_type == 's') ? my_msg.private_info.pid : 0;
-      temp.actuator_pid = (my_msg.private_info.device_type == 'a') ? my_msg.private_info.pid : 0;
-      temp.info = my_msg.private_info;
-      database = g_array_append_val (database, temp);
+      db.sensor_pid = (my_msg.private_info.device_type == 's') ? my_msg.private_info.pid : 0;
+      db.actuator_pid = (my_msg.private_info.device_type == 'a') ? my_msg.private_info.pid : 0;
+      db.info = my_msg.private_info;
+      database = g_array_append_val (database, db);
       *db_index = database->len;
       g_hash_table_insert (hash, my_msg.private_info.name, db_index);
     } else {
-      temp = g_array_index (database, struct hash_entry_t, *db_index);
-      if (temp.sensor_pid == 0 ) {
-        temp.sensor_pid = my_msg.private_info.pid;
-        temp.info.threshold = my_msg.private_info.threshold;
-        temp.info.current_value = my_msg.private_info.current_value;
-        g_array_insert_val (database, *db_index, temp);
-      } else if (temp.actuator_pid == 0) {
-        temp.actuator_pid = my_msg.private_info.pid;
-        temp.info.activated = my_msg.private_info.activated;
-        g_array_insert_val (database, *db_index, temp);
+      db = g_array_index (database, struct db_entry_t, *db_index);
+      if (db.sensor_pid == 0 ) {
+        db.sensor_pid = my_msg.private_info.pid;
+        db.info.threshold = my_msg.private_info.threshold;
+        db.info.current_value = my_msg.private_info.current_value;
+        g_array_insert_val (database, *db_index, db);
+      } else if (db.actuator_pid == 0) {
+        db.actuator_pid = my_msg.private_info.pid;
+        db.info.activated = my_msg.private_info.activated;
+        g_array_insert_val (database, *db_index, db);
       }//end if
     }
     
@@ -97,7 +97,7 @@ int main (int argc, char *argv[]) {
   } else if (pid > 0)  {
     //child
     hash = g_hash_table_new(g_str_hash, g_str_equal);
-    database = g_array_new (FALSE, TRUE, sizeof (struct hash_entry_t));
+    database = g_array_new (FALSE, TRUE, sizeof (struct db_entry_t));
     ev = event_new (base, -1, EV_PERSIST, child_duty, NULL);
   }
   tv.tv_sec = 1;
