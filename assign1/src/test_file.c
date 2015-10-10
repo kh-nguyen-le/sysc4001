@@ -47,10 +47,9 @@ int main (int argc, char *argv[])  {
     temp.sensor_pid = some_data.private_info.pid;
     temp.info = some_data.private_info;
     g_array_append_val (garray, temp);
+    printf ("Array size: %d\n", garray->len);
+    if (g_hash_table_insert (hash, g_strdup(temp.info.name), GINT_TO_POINTER (garray->len - 1))) printf ("Hash insert succeeded\n");
     printf ("Hash size: %d\n", g_hash_table_size (hash));
-    g_hash_table_insert (hash, (gpointer*)temp.info.name, GINT_TO_POINTER (garray->len - 1));
-    printf ("Hash size: %d\n", g_hash_table_size (hash));
-    printf ("Hash insert succeed\n");
     
     reply_msg.msg_type = some_data.private_info.pid;
     reply_msg.private_info.command = START_COMMAND;
@@ -62,7 +61,7 @@ int main (int argc, char *argv[])  {
       printf ("Sending ACT command to PID: %d\n", some_data.private_info.pid);
       msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);
     }
-    if (++count > 10) {
+    if (++count > 10 && g_random_boolean ()) {
       reply_msg.private_info.command = STOP_COMMAND;
       printf ("Sending STOP command to PID: %d\n", some_data.private_info.pid);
       msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);

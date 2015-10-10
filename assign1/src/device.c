@@ -53,7 +53,7 @@ int main (int argc, char *argv[]) {
     exit (EXIT_FAILURE);
   }
   base = event_base_new();
-  struct event *ev;
+  struct event *ev, *ev2;
   struct timeval period = {2,0};
   // parse cmd line arguments
   for (int i = 1; i < argc; i++)  {
@@ -76,10 +76,12 @@ int main (int argc, char *argv[]) {
     srand (time (NULL));
     ev = event_new (base, -1, EV_PERSIST, sensor_duty, NULL);
     struct timeval tv = {3,0};
-    event_add (event_new (base, -1, EV_PERSIST, receive_duty, (gboolean*) FALSE), &tv);
+    ev2 = event_new (base, -1, EV_PERSIST, receive_duty, (gboolean*) FALSE);
+    event_add (ev2, &tv);
     break;
   case 'a':
     ev = event_new (base, -1, EV_PERSIST, receive_duty, (gboolean*) TRUE);
+    ev2 = NULL;
     private_info.threshold = 0;
     private_info.current_value = 0;
     break;
@@ -102,6 +104,9 @@ int main (int argc, char *argv[]) {
   } while (cmd_msg.private_info.command != START_COMMAND);
   fprintf (stdout, "Dispatching event base!\n");
   event_add (ev, &period);
-  event_base_dispatch(base);
+  event_base_dispatch (base);
+  event_free (ev);
+  if (ev2 != NULL) event_free (ev2);
+  event_base_free (base);
 
 }
