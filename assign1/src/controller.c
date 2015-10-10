@@ -79,7 +79,7 @@ int main (int argc, char *argv[]) {
     exit (EXIT_FAILURE);
   }
   
-  //sscanf(argv[1], "%s", &cmd_msg.private_info.name);
+  sscanf(argv[1], "%s", cmd_msg.private_info.name);
   if (!acquire_msgq ())  exit (EXIT_FAILURE);
     
   pid = fork ();
