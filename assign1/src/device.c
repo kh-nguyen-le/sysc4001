@@ -2,7 +2,7 @@
 #include <event2/event.h>
 
 static struct device_info private_info;
-static struct ctrl_msg cmd_msg;
+struct ctrl_msg cmd_msg;
 static struct event_base *base;
 
 void sigint_handler (int sig) {
@@ -18,7 +18,7 @@ int fwd_info () {
   if (msgsnd (mqid, (void*)&my_msg, sizeof (struct device_info), 0) == -1) {
     perror ("Message send failed!");
     return (0);
-  }
+  } //end if
   return (1);
 }
 
@@ -39,9 +39,12 @@ void sensor_duty (evutil_socket_t fd, short events, void *arg) {
   if (private_info.current_value > private_info.threshold)  {
     fprintf (stdout,"%s alarm is going off!\n", private_info.name);
     private_info.activated = TRUE;
-  }
+  } //end if
   
-  fwd_info ();
+  if (!fwd_info ()) {
+    event_base_loopbreak (base);
+    fprintf (stdout, "Lost connection with controller! Exiting..\n");
+  } //end if
 }
 
 void receive_duty (evutil_socket_t fd, short events, void *arg) {
@@ -49,18 +52,26 @@ void receive_duty (evutil_socket_t fd, short events, void *arg) {
   if (event_base_got_break (base)) {
    event_del (me);
    return;
-  }
-  
-  msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), private_info.pid, IPC_NOWAIT);
+  } //end if
+  fprintf (stdout, "Checking for command from controller..\n");
+  if (msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), private_info.pid, IPC_NOWAIT) == -1) {
+    if (errno != ENOMSG && errno != EAGAIN) {
+      event_base_loopbreak (base);
+      fprintf (stdout, "Lost connection with controller! Exiting..\n");
+    } //end if
+  } //end if
   
   if (private_info.device_type == 'a' && cmd_msg.private_info.command == ACT_COMMAND)  {
     fprintf(stdout, "%s is activated!\n", private_info.name);
     private_info.activated = TRUE;
-    fwd_info ();
+    if (!fwd_info ()) {
+      event_base_loopbreak (base);
+      fprintf (stdout, "Lost connection with controller! Exiting..\n");
+    } //end if
   } else if (cmd_msg.private_info.command == STOP_COMMAND) {
     event_base_loopbreak (base);
     fprintf (stdout, "STOP command received. Cleaning up.\n");
-  }
+  } //end else if
 }
 
 
@@ -68,7 +79,7 @@ int main (int argc, char *argv[]) {
   if (!(argc > 1 && argc <=4) ) {
     fprintf (stdout, "Invalid argument length! Exiting..");
     exit (EXIT_FAILURE);
-  }
+  } //end if
   
   struct sigaction act;
   act.sa_handler = sigint_handler;
@@ -88,8 +99,8 @@ int main (int argc, char *argv[]) {
       private_info.device_type = argv[i][1];
     }else if (sscanf (argv[i], "%s", name)){
       strcpy (private_info.name, name);
-    }  
-  }  
+    }  //end else if
+  } //end for
   // initialize
   private_info.pid = getpid ();
   private_info.activated = FALSE;
@@ -114,7 +125,7 @@ int main (int argc, char *argv[]) {
     event_base_free (base);
     exit (EXIT_FAILURE);
     break;
-  }
+  } //end switch
   
   if (!init ())  {
     perror ("Fatal error during intialization!");
@@ -122,19 +133,19 @@ int main (int argc, char *argv[]) {
     if (ev2 != NULL) event_free (ev2);
     event_base_free (base);
     exit (EXIT_FAILURE);
-  }
+  } //end if
   
   if (msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), private_info.pid, 0) == -1) {
     fprintf (stdout, "msgrcv failed with error: %d\n", errno);
     perror ("msgrcv");
-  }
+  } //end if
   if (cmd_msg.private_info.command != START_COMMAND) {
     fprintf (stdout, "Fatal error during handshaking!\n");
     event_free (ev);
     if (ev2 != NULL) event_free (ev2);
     event_base_free (base);
     exit (EXIT_FAILURE);
-  }
+  } //end if
   fprintf (stdout, "Received acknowledgement from controller.\n");
   event_add (ev, &period);
   event_base_dispatch (base);
