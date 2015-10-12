@@ -3,7 +3,6 @@
 
 static struct event_base *base;
 static struct ctrl_msg cmd_msg;
-static struct timeval tv;
 GHashTable* hash;
 GArray* database;
 
@@ -15,44 +14,44 @@ void child_duty (evutil_socket_t fd, short events, void *arg) {
   int count = 0;
   
   if (msgrcv (mqid, (void *)&my_msg, sizeof (struct device_info), CONTROLLER_CHILD, 0))  {
-    if (!g_hash_table_lookup_extended (hash, my_msg.private_info.name, (gpointer*)key , (gpointer*)db_index))  {
-      cmd_msg.msg_type = my_msg.private_info.pid;
-      cmd_msg.private_info.command = START_COMMAND;
-      printf ("Sending START command to PID: %d\n", my_msg.private_info.pid);
+    if (!g_hash_table_lookup_extended (hash, my_msg.info.name, (gpointer*)key , (gpointer*)db_index))  {
+      cmd_msg.msg_type = my_msg.info.pid;
+      cmd_msg.info.command = START_COMMAND;
+      printf ("Sending START command to PID: %d\n", my_msg.info.pid);
       if (msgsnd (mqid, (void*)&cmd_msg, sizeof (struct ctrl_info), 0) == -1) {
         perror ("Message send failed!");
       }//end if
-      printf ("Sent START command to PID: %d\n", my_msg.private_info.pid);
-      db.sensor_pid = (my_msg.private_info.device_type == 's') ? my_msg.private_info.pid : 0;
-      db.actuator_pid = (my_msg.private_info.device_type == 'a') ? my_msg.private_info.pid : 0;
-      db.info = my_msg.private_info;
+      printf ("Sent START command to PID: %d\n", my_msg.info.pid);
+      db.sensor_pid = (my_msg.info.type == 's') ? my_msg.info.pid : 0;
+      db.actuator_pid = (my_msg.info.type == 'a') ? my_msg.info.pid : 0;
+      db.info = my_msg.info;
       database = g_array_append_val (database, db);
       *db_index = database->len;
-      g_hash_table_insert (hash, my_msg.private_info.name, db_index);
+      g_hash_table_insert (hash, g_strdup(my_msg.info.name), db_index);
     } else {
       db = g_array_index (database, struct db_entry_t, *db_index);
       if (db.sensor_pid == 0 ) {
-        db.sensor_pid = my_msg.private_info.pid;
-        db.info.threshold = my_msg.private_info.threshold;
-        db.info.current_value = my_msg.private_info.current_value;
+        db.sensor_pid = my_msg.info.pid;
+        db.info.threshold = my_msg.info.threshold;
+        db.info.value = my_msg.info.value;
         g_array_insert_val (database, *db_index, db);
       } else if (db.actuator_pid == 0) {
-        db.actuator_pid = my_msg.private_info.pid;
-        db.info.activated = my_msg.private_info.activated;
+        db.actuator_pid = my_msg.info.pid;
+        db.info.activated = my_msg.info.activated;
         g_array_insert_val (database, *db_index, db);
       }//end if
     }
     
-    if (my_msg.private_info.device_type == 'a') {
-      cmd_msg.private_info.command = ACT_COMMAND;
-      printf ("Sending ACT command to PID: %d\n", my_msg.private_info.pid);
-      printf ("Device name: %s \n PID: %d", my_msg.private_info.name, my_msg.private_info.pid);
+    if (my_msg.info.type == 'a') {
+      cmd_msg.info.command = ACT_COMMAND;
+      printf ("Sending ACT command to PID: %d\n", my_msg.info.pid);
+      printf ("Device name: %s \n PID: %d", my_msg.info.name, my_msg.info.pid);
       msgsnd (mqid, (void*)&cmd_msg, sizeof (struct ctrl_info), 0);
     }//end if
     if (++count > 10) {
-      cmd_msg.private_info.command = STOP_COMMAND;
-      printf ("Sending STOP command to PID: %d\n", my_msg.private_info.pid);
-      printf ("Device name: %s \n PID: %d", my_msg.private_info.name, my_msg.private_info.pid);
+      cmd_msg.info.command = STOP_COMMAND;
+      printf ("Sending STOP command to PID: %d\n", my_msg.info.pid);
+      printf ("Device name: %s \n PID: %d", my_msg.info.name, my_msg.info.pid);
       msgsnd (mqid, (void*)&cmd_msg, sizeof (struct ctrl_info), 0);
     }//end if
   } else {
@@ -71,6 +70,7 @@ void parent_duty (evutil_socket_t fd, short events, void *arg) {
 
 int main (int argc, char *argv[]) {
   struct event* ev;
+  struct timeval tv;
   // parse cmd line arguments
   base = event_base_new();
   pid_t pid;
@@ -79,7 +79,7 @@ int main (int argc, char *argv[]) {
     exit (EXIT_FAILURE);
   }
   
-  sscanf(argv[1], "%s", cmd_msg.private_info.name);
+  sscanf(argv[1], "%s", cmd_msg.info.name);
   if (!acquire_msgq ())  exit (EXIT_FAILURE);
     
   pid = fork ();

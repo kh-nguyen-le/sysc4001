@@ -13,8 +13,8 @@ void sigint_handler (int sig) {
 int fwd_info () {
   struct device_msg my_msg;
   my_msg.msg_type = CONTROLLER_CHILD;
-  my_msg.private_info = private_info;
-  fprintf (stdout, "%s %c sending msg to controller\n", private_info.name, private_info.device_type); 
+  my_msg.info = private_info;
+  fprintf (stdout, "%s %c sending msg to controller\n", private_info.name, private_info.type); 
   if (msgsnd (mqid, (void*)&my_msg, sizeof (struct device_info), 0) == -1) {
     perror ("Message send failed!");
     return (0);
@@ -34,9 +34,9 @@ void sensor_duty (evutil_socket_t fd, short events, void *arg) {
    event_del (me);
    return;
   }
-  private_info.current_value = rand () % (private_info.threshold * 2);
+  private_info.value = rand () % (private_info.threshold * 2);
   
-  if (private_info.current_value > private_info.threshold)  {
+  if (private_info.value > private_info.threshold)  {
     fprintf (stdout,"%s alarm is going off!\n", private_info.name);
     private_info.activated = TRUE;
   } //end if
@@ -61,14 +61,14 @@ void receive_duty (evutil_socket_t fd, short events, void *arg) {
     } //end if
   } //end if
   
-  if (private_info.device_type == 'a' && cmd_msg.private_info.command == ACT_COMMAND)  {
+  if (private_info.type == 'a' && cmd_msg.info.command == ACT_COMMAND)  {
     fprintf(stdout, "%s is activated!\n", private_info.name);
     private_info.activated = TRUE;
     if (!fwd_info ()) {
       event_base_loopbreak (base);
       fprintf (stdout, "Lost connection with controller! Exiting..\n");
     } //end if
-  } else if (cmd_msg.private_info.command == STOP_COMMAND) {
+  } else if (cmd_msg.info.command == STOP_COMMAND) {
     event_base_loopbreak (base);
     fprintf (stdout, "STOP command received. Cleaning up.\n");
   } //end else if
@@ -96,7 +96,7 @@ int main (int argc, char *argv[]) {
     if (sscanf (argv[i], "%i", &threshold))  {
       private_info.threshold = threshold;
     }else if (argv[i][0] == '-')  {
-      private_info.device_type = argv[i][1];
+      private_info.type = argv[i][1];
     }else if (sscanf (argv[i], "%s", name)){
       strcpy (private_info.name, name);
     }  //end else if
@@ -106,7 +106,7 @@ int main (int argc, char *argv[]) {
   private_info.activated = FALSE;
   base = event_base_new();
   
-  switch (private_info.device_type) {
+  switch (private_info.type) {
   case 's':
     srand (time (NULL));
     ev = event_new (base, -1, EV_PERSIST, sensor_duty, event_self_cbarg ());
@@ -118,7 +118,7 @@ int main (int argc, char *argv[]) {
     ev = event_new (base, -1, EV_PERSIST, receive_duty, event_self_cbarg ());
     ev2 = NULL;
     private_info.threshold = 0;
-    private_info.current_value = 0;
+    private_info.value = 0;
     break;
   default:
     fprintf (stdout, "Invalid device type! Exiting..\n");
@@ -139,7 +139,7 @@ int main (int argc, char *argv[]) {
     fprintf (stdout, "msgrcv failed with error: %d\n", errno);
     perror ("msgrcv");
   } //end if
-  if (cmd_msg.private_info.command != START_COMMAND) {
+  if (cmd_msg.info.command != START_COMMAND) {
     fprintf (stdout, "Fatal error during handshaking!\n");
     event_free (ev);
     if (ev2 != NULL) event_free (ev2);

@@ -39,15 +39,15 @@ int main (int argc, char *argv[])  {
 	  exit (EXIT_FAILURE);
       } //end else
     } else {
-      printf ("Name: %s\n", some_data.private_info.name);
-      printf ("Type: %c\n", some_data.private_info.device_type);
-      printf ("Threshold: %d\n", some_data.private_info.threshold);
-      printf ("Current Value: %d\n", some_data.private_info.current_value);
-      printf ("Sending START command to PID: %d\n", some_data.private_info.pid);
+      printf ("Name: %s\n", some_data.info.name);
+      printf ("Type: %c\n", some_data.info.type);
+      printf ("Threshold: %d\n", some_data.info.threshold);
+      printf ("Current Value: %d\n", some_data.info.value);
+      printf ("Sending START command to PID: %d\n", some_data.info.pid);
       
       struct db_entry_t temp;
-      temp.sensor_pid = some_data.private_info.pid;
-      temp.info = some_data.private_info;
+      temp.sensor_pid = some_data.info.pid;
+      temp.info = some_data.info;
       g_array_append_val (garray, temp);
       printf ("Array size: %d\n", garray->len);
       if (g_hash_table_insert (hash, g_strdup(temp.info.name), GINT_TO_POINTER (garray->len - 1))) printf ("Hash insert succeeded\n");
@@ -60,20 +60,20 @@ int main (int argc, char *argv[])  {
       } //end for
       g_free ((gchar**)keys);
       
-      reply_msg.msg_type = some_data.private_info.pid;
-      g_strlcpy (reply_msg.private_info.name, "tester", 25);
-      reply_msg.private_info.command = START_COMMAND;
+      reply_msg.msg_type = some_data.info.pid;
+      g_strlcpy (reply_msg.info.name, "tester", 25);
+      reply_msg.info.command = START_COMMAND;
       if (msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0) == -1) {
         perror ("Message send failed!");
       } //end if
-      if (some_data.private_info.device_type == 'a') {
-        reply_msg.private_info.command = ACT_COMMAND;
-        printf ("Sending ACT command to PID: %d\n", some_data.private_info.pid);
+      if (some_data.info.type == 'a') {
+        reply_msg.info.command = ACT_COMMAND;
+        printf ("Sending ACT command to PID: %d\n", some_data.info.pid);
         msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);
       } //end if
       if (++count > 10 && g_random_boolean ()) {
-        reply_msg.private_info.command = STOP_COMMAND;
-        printf ("Sending STOP command to PID: %d\n", some_data.private_info.pid);
+        reply_msg.info.command = STOP_COMMAND;
+        printf ("Sending STOP command to PID: %d\n", some_data.info.pid);
         msgsnd (mqid, (void*)&reply_msg, sizeof (struct ctrl_info), 0);
       } //end if
     } //end else

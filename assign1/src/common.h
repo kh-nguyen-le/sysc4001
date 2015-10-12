@@ -28,16 +28,16 @@ typedef enum {
 
 struct device_info {
   pid_t pid;
+  char type;
   char name [25];
-  char device_type;
   int threshold;
-  int current_value;
+  int value;
   gboolean activated;
 };
 
 struct device_msg {
   long int msg_type;
-  struct device_info private_info;
+  struct device_info info;
 };
 
 struct ctrl_info {
@@ -47,7 +47,7 @@ struct ctrl_info {
 
 struct ctrl_msg {
   long int msg_type;
-  struct ctrl_info private_info;
+  struct ctrl_info info;
 };
 
 struct db_entry_t {
