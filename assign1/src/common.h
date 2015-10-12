@@ -13,10 +13,8 @@
 #include <sys/time.h>
 #include <glib.h>
 
-typedef enum {
-  CONTROLLER_CHILD=1,
-  CONTROLLER_PARENT
-} msg_qid;
+#define CONTROLLER_CHILD 1
+
 
 typedef enum {
   START_COMMAND=1,
