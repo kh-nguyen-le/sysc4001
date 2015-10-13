@@ -1,9 +1,11 @@
 #include "common.h"
 
 static char* prefix;
+gboolean read_msg_flag=FALSE;
 
 void sigint_handler (int sig) {
   fprintf (stdout, "%s Caught SIGINT\n", prefix);
+  read_msg_flag=TRUE;
 }
 
 void _destruct (gpointer data) {
@@ -64,11 +66,21 @@ int main (int argc, char *argv[]) {
   } else if (pid > 0)  {
     //parent
     fd_to_ctrl = open(TO_CONTROLLER, O_RDONLY);
-    fd_to_cloud = open(TO_CLOUD, O_WRONLY);
+    fd_to_cloud = open(TO_CLOUD, O_WRONLY | O_NONBLOCK);
     sigaction (SIGINT, &act, 0);
-    
+    char buf[BUFSIZ];
     while (running) {
-      
+      if (!read_msg_flag) {
+        read (fd_to_ctrl, buf, BUFSIZ);
+        if (g_strcmp0 (buf,"")) fprintf (stdout, "%s Received command from cloud: %s\n", prefix, buf);
+        /* clean buf from any data */
+        memset(buf, 0, sizeof(buf));
+        } else {
+          if (msgrcv (mqid, (void *)&cmd_msg, sizeof (struct ctrl_info), getpid (), 0) != -1) {
+            write (fd_to_cloud, cmd_msg.info.text, 25);
+            read_msg_flag = FALSE;
+          }
+        }
     } //end while
   } else if (pid == 0)  {
     //child
