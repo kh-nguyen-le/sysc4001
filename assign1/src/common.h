@@ -15,6 +15,7 @@
 
 #define CONTROLLER_CHILD 1
 
+#define MAX_COMPONENTS 5
 
 typedef enum {
   START_COMMAND=1,
@@ -27,7 +28,9 @@ typedef enum {
 struct device_info {
   pid_t pid;
   char type;
-  char name [25];
+  char system [11];
+  char component [11];
+  char name [11];
   int threshold;
   int value;
   gboolean activated;
@@ -71,5 +74,16 @@ void remove_msgq () {
   (void)msgctl (mqid, IPC_RMID, 0);
   
   mqid = -1;
+}
+
+char* type_str (char c) {
+  switch (c) {
+    case 's':
+      return "Sensor";
+    case 'a':
+      return "Actuator";
+    default:
+      return NULL;
+  }
 }
 
