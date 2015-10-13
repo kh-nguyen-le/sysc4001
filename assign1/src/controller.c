@@ -1,5 +1,4 @@
 #include "common.h"
-#include <event2/event.h>
 
 static char* prefix;
 
@@ -28,6 +27,9 @@ int main (int argc, char *argv[]) {
   pid_t pid, ppid;
   pid_t* pid_ptr;
   gboolean running = TRUE;
+  
+  int fd_to_ctrl;
+  int fd_to_cloud;
   
   struct device_msg dev_msg;
   memset (&dev_msg.info, 0, sizeof (struct device_info));
@@ -61,7 +63,8 @@ int main (int argc, char *argv[]) {
     exit (EXIT_FAILURE);
   } else if (pid > 0)  {
     //parent
-    
+    fd_to_ctrl = open(TO_CONTROLLER, O_RDONLY);
+    fd_to_cloud = open(TO_CLOUD, O_WRONLY);
     sigaction (SIGINT, &act, 0);
     
     while (running) {

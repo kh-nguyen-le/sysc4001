@@ -6,7 +6,7 @@ LDIR = ../lib
 LDFLAGS = -L$(LDIR) -levent
 PKG-CONFIG = $(shell pkg-config --libs --cflags glib-2.0)
 
-all: device controller test
+all: device controller cloud
 
 device: device.c
 	$(CC) -o $@ $^ $(PKG-CONFIG) $(CFLAGS) $(LDFLAGS)
