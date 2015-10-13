@@ -148,6 +148,7 @@ int main (int argc, char *argv[]) {
     event_free (ev);
     if (ev2 != NULL) event_free (ev2);
     event_base_free (base);
+    g_free (prefix);
     exit (EXIT_FAILURE);
   } //end if
   
@@ -160,6 +161,7 @@ int main (int argc, char *argv[]) {
     event_free (ev);
     if (ev2 != NULL) event_free (ev2);
     event_base_free (base);
+    g_free (prefix);
     exit (EXIT_FAILURE);
   } //end if
   fprintf (stdout, "%s Received acknowledgement from controller.\n", prefix);
@@ -169,5 +171,6 @@ int main (int argc, char *argv[]) {
   event_free (ev);
   if (ev2 != NULL) event_free (ev2);
   event_base_free (base);
+  g_free (prefix);
   exit (EXIT_SUCCESS);
 }
