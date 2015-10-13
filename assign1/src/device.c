@@ -104,9 +104,9 @@ int main (int argc, char *argv[]) {
         fprintf (stdout, "Invalid names arguement! Exiting..\n");
         exit (EXIT_FAILURE);
       }
-      g_strlcpy (private_info.system, names[0], 10);
-      g_strlcpy (private_info.component, names[1], 10);
-      g_strlcpy (private_info.name, names[2], 10);
+      g_strlcpy (private_info.system, names[0], 11);
+      g_strlcpy (private_info.component, names[1], 11);
+      g_strlcpy (private_info.name, names[2], 11);
       g_strfreev (names);
     }  //end else if
   } //end for
