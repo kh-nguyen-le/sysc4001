@@ -15,7 +15,6 @@ int main (int argc, char *argv[])  {
   GHashTable* hash = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, info_destructor);
   struct device_msg some_data;
   gchar* key;
-  guint* length;
   struct system_info* db;
   struct system_info** reg = &db;
   acquire_msgq ();
