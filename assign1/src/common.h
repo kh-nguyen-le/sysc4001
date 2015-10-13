@@ -17,6 +17,9 @@
 
 #define MAX_COMPONENTS 5
 
+#define TO_CLOUD "./cloud_fifo"
+#define TO_CONTROLLER "./ctrl_fifo"
+
 typedef enum {
   START_COMMAND=1,
   ACT_COMMAND,
