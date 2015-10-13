@@ -71,7 +71,7 @@ int main (int argc, char *argv[]) {
     //child
     
     ppid = getppid();
-    //act.sa_handler = SIG_IGN;
+    act.sa_handler = SIG_IGN;
     sigaction (SIGINT, &act, 0);
     
     registry = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, _destruct);
