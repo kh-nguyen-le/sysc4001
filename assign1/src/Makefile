@@ -12,10 +12,9 @@ device: device.c
 	$(CC) -o $@ $^ $(PKG-CONFIG) $(CFLAGS) $(LDFLAGS)
 	
 controller: controller.c
-	$(CC) -o $@ $^ $(PKG-CONFIG) $(CFLAGS) $(LDFLAGS)	
-
-# delete test target later
-test:   test_file.c
+	$(CC) -o $@ $^ $(PKG-CONFIG) $(CFLAGS)	
+	
+cloud:   cloud.c
 	$(CC) -o $@ $^ $(PKG-CONFIG) $(CFLAGS)
 
 clean:
