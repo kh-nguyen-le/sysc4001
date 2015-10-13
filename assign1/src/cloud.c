@@ -13,10 +13,9 @@ int main()
      perror("Failed to created FIFO");
      exit (EXIT_FAILURE);
    }
-
    /* open, read, and display the message from the FIFO */
-   fd_to_ctrl = open(TO_CONTROLLER, O_WRONLY);
-   fd_to_cloud = open(TO_CLOUD, O_RDONLY);
+   fd_to_ctrl = open(TO_CONTROLLER, O_WRONLY | O_NONBLOCK);
+   fd_to_cloud = open(TO_CLOUD, O_RDONLY | O_NONBLOCK);
 
    printf("Cloud Running.\n");
    pid = fork ();
@@ -51,7 +50,7 @@ int main()
      ppid = getpid ();
      while (running) {
       read (fd_to_cloud, buf, BUFSIZ);
-      if (buf!=NULL) fprintf (stdout, "%d::Cloud Received info from controller: %s\n", ppid, buf);
+      if (g_strcmp0 (buf,"")) fprintf (stdout, "%d::Cloud Received info from controller: %s\n", ppid, buf);
       /* clean buf from any data */
       memset(buf, 0, sizeof(buf));
       }
