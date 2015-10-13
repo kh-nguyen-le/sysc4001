@@ -113,10 +113,14 @@ int main (int argc, char *argv[]) {
   // initialize
   private_info.pid = getpid ();
   private_info.activated = FALSE;
-  base = event_base_new();
   
   switch (private_info.type) {
   case 's':
+    if (private_info.threshold == 0) {
+      fprintf (stdout, "Threshold not set! Exiting..\n");
+      exit (EXIT_FAILURE);
+    }
+    base = event_base_new();
     srand (time (NULL));
     ev = event_new (base, -1, EV_PERSIST, sensor_duty, event_self_cbarg ());
     struct timeval tv = {3,0};
@@ -124,6 +128,7 @@ int main (int argc, char *argv[]) {
     event_add (ev2, &tv);
     break;
   case 'a':
+    base = event_base_new();
     ev = event_new (base, -1, EV_PERSIST, receive_duty, event_self_cbarg ());
     ev2 = NULL;
     private_info.threshold = 0;
@@ -131,7 +136,6 @@ int main (int argc, char *argv[]) {
     break;
   default:
     fprintf (stdout, "Invalid device type! Exiting..\n");
-    event_base_free (base);
     exit (EXIT_FAILURE);
     break;
   } //end switch
