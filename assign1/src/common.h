@@ -42,7 +42,7 @@ struct device_msg {
 };
 
 struct ctrl_info {
-    char name [25];
+    char text [25];
     ctrl_cmd command;
 };
 
@@ -51,10 +51,17 @@ struct ctrl_msg {
   struct ctrl_info info;
 };
 
-struct db_entry_t {
-  pid_t sensor_pid;
-  pid_t actuator_pid;
-  struct device_info info;
+struct system_info {
+  char name [11];
+  int head;
+  struct component_info {
+    char name [11];
+    pid_t sensor_pid;
+    pid_t actor_pid;
+    char sensor_name [11];
+    char actor_name [11];
+    int reading;
+  } components[MAX_COMPONENTS];
 }; 
 
 static int mqid =-1;
