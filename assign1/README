@@ -1,0 +1,28 @@
+Group Members:
+Khoi Nguyen Le 100801155
+Jordan Flood   100861013
+
+Source files are in ./src with the Makefile. To compile, cd into ./src and type make.
+
+We used two 3rd party libraries to organize our data more efficiently and to simplify the non-IPC logic involved.
+Specifically we used libevent's event scheduler to avoid having to sleep in the device periodic duties and GLib to for
+Hash Table structure and efficient stringIO functions.
+
+The entire contents of the ./include and ./lib folders to ensure that libevent is linked properly with needing root access.
+
+To run to sys, first run the cloud with ./cloud then run the controller with ./controller [NAME]. The NAME parameter is not optional.
+
+Then the devices must be configured in the following format:
+ ./device -[TYPE] [THRESHOLD] [SYSTEM_NAME,COMPONENT_NAME,DEVICE_NAME]
+ 
+ TYPE can be -s for sensor or -a for actuator
+ THRESHOLD must be > 0 for sensor but may be omitted for acutuator
+ A SYSTEM is a group of up to 5 components and may refer to an are or complex device, eg Bedroom or Television
+ DEVICE_NAME should refer to what a sensor monitors or what an actuator moves, eg Sound or Motor
+ 
+ The following are examples of valid device parameters.
+ 
+ ./device -s 25 "Bedroom,Light,Heat"
+ ./device -a "Bedroom,Light,Switch"
+ ./device -s 50 "Bedroom,Door,Motion"
+ ./device -a "Bedroom,Door,Lock"
