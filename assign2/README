@@ -1,0 +1,35 @@
+Group Members:
+Khoi Nguyen Le 100801155
+Jordan Flood   100861013
+
+Source files are in ./src. To compile type make at project root directory.
+
+Our implementation of this problem uses a third independent process, the host, to first create the shared memory segment and act as a buffered byte stream pipeline. We used named POSIX semaphores so the host process can wait for the transfer to complete before destroying the shared memory and semaphores.
+
+The res directory contains sample text files with predefined sizes.
+
+The log directory contains our results of a few sample cases.
+
+The host process must be started first. It may take arguments in the form of -n NUM for buffer count, -s SIZE for buffer size and -t to turn off mutual exclusion semaphore.
+
+The consumer process takes no arguments. The consumer process outputs to /tmp/Consumer-PID.out to verify valid of the data.
+
+The producer process must take a path to input file as an argument. It should be started last for the elapsed time output to have meaning.
+
+
+The following are examples of valid host parameters.
+
+ ./host
+ ./host -t
+ ./host -n 150 -s 512
+
+
+REPORT:
+
+The mutual exclusion lock is unnessecary in this case since the read and write indexes will never overlap with the writeable space and readable data semphores. Turning off the mutex consistently reduces runtime.
+
+Increasing buffer size improves perform all around since both ends already do IO at BUFSIZ.
+
+Increasing the number of buffers improves consumer performance but increases the amount of time the producer spends waiting since the default buffer size is much smaller than the max of 8192. Seperating file read and buffer waiting into seperate threads should resolve this issue.
+
+
