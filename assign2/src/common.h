@@ -11,6 +11,8 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/time.h>
+#define MICRO_SEC_IN_SEC 1000000
 
 #define MAX_CHUNKS 150
 
