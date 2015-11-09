@@ -10,6 +10,7 @@ int main (int argc, char* argv[]) {
     size_t num_segments;
     int len = 0;
     char buf[BUFSIZ];
+    sem_t* mutex;
 
     // parse command line args
     if (argc > 1) {
@@ -32,24 +33,20 @@ int main (int argc, char* argv[]) {
     shmid = shmget (ftok (KEY_PATH,1), sizeof (struct buffered_stream), 0666);
     if(shmid<0)
     {
-        perror ("Failed to created shared memory");
+        perror ("Error acessing shared memory");
         exit (EXIT_FAILURE);
     }
 
     // attach this segment to virtual memory and initialise
     shm = (struct buffered_stream*) shmat (shmid, NULL, 0);
     if (shm < 0) {
-        perror ("Failed to attach segement");
+        perror ("Failed to attach segment");
         exit (EXIT_FAILURE);
     }
 
     // open semaphores
-    sem_t* mutex = sem_open (MUTEX_LOCK, O_CREAT, 0644, 1);
-    printf ("num_chunks: %d.\n", shm->num_chunks);
+    if (shm->mutex_toggle) mutex = sem_open (MUTEX_LOCK, O_CREAT, 0644, 1);
     sem_t* free_space = sem_open (FREE_CHUNKS, O_CREAT, 0644, (size_t)(shm->num_chunks));
-    int space;
-    sem_getvalue(free_space, &space);
-    printf ("free space: %d.\n", space);
     sem_t* valid_data = sem_open (VALID_DATA, O_CREAT, 0644, 0);
     sem_t* end_stream = sem_open (CLEANUP_LOCK, 0);
 
@@ -71,7 +68,7 @@ int main (int argc, char* argv[]) {
             close (fd);
             exit (EXIT_FAILURE);
         } else if (len == 0) {
-            printf ("Empty input. Ending stream.\n");
+            printf ("Unexected empty input. Ending stream.\n");
             sem_post (valid_data);
             break;
         }

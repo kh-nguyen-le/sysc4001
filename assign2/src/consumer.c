@@ -7,6 +7,8 @@ int main () {
     char path[BUFSIZ];
     int fd;
     int total_bytes = 0;
+    sem_t* mutex;
+
     // create unique output
     sprintf (path, "/tmp/Consumer-%d.out", getpid());
 
@@ -23,22 +25,21 @@ int main () {
     shmid = shmget (ftok (KEY_PATH,1), sizeof (struct buffered_stream), 0666);
     if(shmid<0)
     {
-        perror ("Failed to created shared memory");
+        perror ("Error acessing shared memory");
         exit (EXIT_FAILURE);
     }
 
     // attach this segment to virtual memory and initialise
     shm = (struct buffered_stream*) shmat (shmid, NULL, 0);
     if (shm < 0) {
-        perror ("Failed to attach segement");
+        perror ("Failed to attach segment");
         exit (EXIT_FAILURE);
     }
 
     // open semaphores
-    sem_t* mutex = sem_open (MUTEX_LOCK, 0);
-    printf ("num_chunks: %d.\n", shm->num_chunks);
-    sem_t* free_space = sem_open (FREE_CHUNKS, 0);
-    sem_t* valid_data = sem_open (VALID_DATA, 0);
+    if (shm->mutex_toggle) mutex = sem_open (MUTEX_LOCK, O_CREAT, 0644, 1);
+    sem_t* free_space = sem_open (FREE_CHUNKS, O_CREAT, 0644, (size_t)(shm->num_chunks));
+    sem_t* valid_data = sem_open (VALID_DATA, O_CREAT, 0644, 0);
     sem_t* end_stream = sem_open (CLEANUP_LOCK, 0);
 
     if ((shm->mutex_toggle && mutex == SEM_FAILED) | (free_space == SEM_FAILED) | (valid_data == SEM_FAILED) |(end_stream == SEM_FAILED)) {
