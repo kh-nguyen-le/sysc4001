@@ -11,6 +11,7 @@ int main (int argc, char* argv[]) {
     int len = 0;
     char buf[BUFSIZ];
     sem_t* mutex;
+    struct timeval start, end;
 
     // parse command line args
     if (argc > 1) {
@@ -55,13 +56,14 @@ int main (int argc, char* argv[]) {
         exit (EXIT_FAILURE);
     }
 
+    gettimeofday (&start,NULL);
+
     // enumerate data segments
     unsigned int chunk_size = shm->chunk_size;
     num_segments = BUFSIZ / chunk_size;
 
     do {
         // starting reading from file
-        printf ("Getting new input.\n");
         len = (int)read (fd, buf, BUFSIZ);
         if (len == -1) {
             perror ("IO Error: ");
@@ -69,14 +71,13 @@ int main (int argc, char* argv[]) {
             exit (EXIT_FAILURE);
         } else if (len == 0) {
             printf ("Unexected empty input. Ending stream.\n");
-            sem_post (valid_data);
+            sem_post (valid_data); // wake consumer without changing write index
             break;
         }
 
         // write segments to stream sequentially
         int count = 0;
         int current = 0;
-        printf ("Writing to buffer.\n");
         while (count < num_segments && current < len) {
             // wait for empty semaphore then mutex lock
             sem_wait (free_space);
@@ -101,11 +102,13 @@ int main (int argc, char* argv[]) {
         }
     } while (len == BUFSIZ);  // until EOF
 
+    gettimeofday (&end, NULL);
     shm->connected = 0;
 
     // clean up
     close (fd);
 
+    printf("Elapsed Time: %ld micro sec\n", ((end.tv_sec * MICRO_SEC_IN_SEC + end.tv_usec) - (start.tv_sec * MICRO_SEC_IN_SEC + start.tv_usec)));
     printf ("Total bytes written to stream: %d\n", total_bytes);
 
     sem_post (end_stream);
