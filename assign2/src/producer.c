@@ -62,16 +62,18 @@ int main (int argc, char* argv[]) {
     unsigned int chunk_size = shm->chunk_size;
     num_segments = BUFSIZ / chunk_size;
 
-    // starting reading from file
-    printf ("Starting data stream.\n");
-
-    len = (int)read (fd, buf, BUFSIZ);
-
-    while (len != 0) {  // until EOF
+    do {
+        // starting reading from file
+        printf ("Getting new input.\n");
+        len = (int)read (fd, buf, BUFSIZ);
         if (len == -1) {
             perror ("IO Error: ");
             close (fd);
             exit (EXIT_FAILURE);
+        } else if (len == 0) {
+            printf ("Empty input. Ending stream.\n");
+            sem_post (valid_data);
+            break;
         }
 
         // write segments to stream sequentially
@@ -92,7 +94,6 @@ int main (int argc, char* argv[]) {
             // record bytes written to stream chunk
             shm->buffer[shm->write_index].bytes = (int) strlen (shm->buffer[shm->write_index].text);
             total_bytes += shm->buffer[shm->write_index].bytes;
-            printf ("Bytes: %d\n", total_bytes);
 
             // iterate write head and wrap around
             shm->write_index = (shm->write_index + 1) % shm->num_chunks;
@@ -101,10 +102,10 @@ int main (int argc, char* argv[]) {
             sem_post (valid_data);
             count++;
         }
-        // start next read
-        len = (int)read (fd, buf, BUFSIZ);
-    }
+    } while (len == BUFSIZ);  // until EOF
+
     shm->connected = 0;
+
     // clean up
     close (fd);
 

@@ -12,7 +12,7 @@ int main () {
 
     // try to open file
     printf ("Opening File: %s\n", path);
-    fd = open (path, O_CREAT | O_RDWR);
+    fd = open (path, O_CREAT | O_WRONLY, 0666);
     if (fd < 0) {
         perror ("IO Error:");
         exit (EXIT_FAILURE);
@@ -39,9 +39,6 @@ int main () {
     printf ("num_chunks: %d.\n", shm->num_chunks);
     sem_t* free_space = sem_open (FREE_CHUNKS, 0);
     sem_t* valid_data = sem_open (VALID_DATA, 0);
-    //int valid;
-    //sem_getvalue(valid_data, &valid);
-    //printf ("free space: %d.\n", valid);
     sem_t* end_stream = sem_open (CLEANUP_LOCK, 0);
 
     if ((shm->mutex_toggle && mutex == SEM_FAILED) | (free_space == SEM_FAILED) | (valid_data == SEM_FAILED) |(end_stream == SEM_FAILED)) {
@@ -55,6 +52,9 @@ int main () {
     while (shm->connected) {  // until no pending input
         // wait for valid semaphore then mutex lock
         sem_wait (valid_data);
+        // check if stream closed while waiting
+        if (!shm->connected) break;
+
         if (shm->mutex_toggle) sem_wait (mutex);
 
         unsigned int curr_length = shm->buffer[shm->read_index].bytes;
@@ -62,10 +62,9 @@ int main () {
         if (write (fd, shm->buffer[shm->read_index].text, curr_length) != curr_length) {
             fprintf (stderr, "Error: Output file corrupted.\n");
         }
-        // clear stream chunk
-        memset (shm->buffer[shm->read_index].text, 0, BUFSIZ * sizeof(char));
 
         total_bytes += curr_length;
+
         // iterate write head and wrap around
         shm->read_index = (shm->read_index + 1) % shm->num_chunks;
 
