@@ -1,0 +1,4 @@
+Opening File: ./res/10KiB.txt
+Accessing shared memory.
+Elapsed Time: 2006 micro sec
+Total bytes written to stream: 10240

@@ -1,0 +1,5 @@
+Opening File: ./res/1MiB.txt
+Accessing shared memory.
+Unexected empty input. Ending stream.
+Elapsed Time: 92625 micro sec
+Total bytes written to stream: 1048576
